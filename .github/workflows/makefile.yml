@@ -1,0 +1,79 @@
+name: Makefile CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CI_ENABLED: true  # Set to 'false' to disable the workflow
+
+jobs:
+  build:
+    if: env.CI_ENABLED == 'true'
+
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-latest] # , macos-latest , windows-latest] # windows failing on build gtest
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    # Ubuntu setup
+    - name: Install dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt update
+        sudo apt install -y build-essential gcc g++ make cmake libgtest-dev
+        # Build and install gtest for direct linking
+        cd /usr/src/gtest
+        sudo cmake .
+        sudo make
+        sudo cp lib/*.a /usr/lib
+
+    # macOS setup
+    - name: Install dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew update
+        brew install gcc make googletest
+
+    # Windows (MSYS2) setup
+    - name: Setup MSYS2 & install GCC + GoogleTest
+      if: matrix.os == 'windows-latest'
+      uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        msystem: MINGW64
+        install: |
+          mingw-w64-x86_64-toolchain
+          gtest
+
+    # Build
+    - name: Build
+      shell: bash
+      run: |
+        make GTEST_DIR=${{ matrix.os == 'windows-latest' && '/mingw64' || matrix.os == 'macos-latest' && '/opt/homebrew/opt/googletest' || '/usr' }}
+
+    # Run checks
+    - name: Run checks
+      shell: bash
+      run: |
+        make run
+
+    # Install
+    - name: Install
+      shell: bash
+      run: |
+        make install
+
+    # Run tests
+    - name: Run tests
+      shell: bash
+      run: |
+        make run_tests
