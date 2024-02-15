@@ -103,51 +103,60 @@ CPPFLAGS += $(INCS)
 # --------------------------------------------------------------------------------
 .PHONY: all
 all: setup_project compile link setup_resources
-	@echo -e "${BLUE} INFO:${RESET} Build Successful"
+	@echo -e "${GREEN} INFO:${RESET} Build Successful"
 	@echo -e ""
 
 # --------------------------------------------------------------------------------
 .PHONY: setup_project
 setup_project:
 	@echo -e "${BLUE} INFO:${RESET} Setting up the project."
-	@echo -e "${BLUE} INFO:${RESET} Create dir: $(CPP_BIN_DIR)"
+	@echo -e "${YELLOW} INFO:${RESET} Create dir: $(CPP_BIN_DIR)"
 	@mkdir -p $(CPP_BIN_DIR)
-	@echo -e "${BLUE} INFO:${RESET} Create dir: $(CPP_OBJ_DIR)"
+	@echo -e "${YELLOW} INFO:${RESET} Create dir: $(CPP_OBJ_DIR)"
 	@mkdir -p $(CPP_OBJ_DIR)
-	@echo -e "${BLUE} INFO:${RESET} Create dir: $(CPP_LIB_DIR)"
+	@echo -e "${YELLOW} INFO:${RESET} Create dir: $(CPP_LIB_DIR)"
 	@mkdir -p $(CPP_LIB_DIR)
-	@echo -e "${BLUE} INFO:${RESET} Create dir: $(CPP_INS_DIR)"
+	@echo -e "${YELLOW} INFO:${RESET} Create dir: $(CPP_INS_DIR)"
 	@mkdir -p $(CPP_INS_DIR)
-	@echo -e "${BLUE} INFO:${RESET} Create dir: $(CPP_EXT_DIR)"
+	@echo -e "${YELLOW} INFO:${RESET} Create dir: $(CPP_EXT_DIR)"
 	@mkdir -p $(CPP_EXT_DIR)
-	@echo -e "${BLUE} INFO:${RESET} Setup Successful"
+	@echo -e "${GREEN} INFO:${RESET} Setup Successful"
+	@echo -e ""
 	@echo -e "${BLUE} INFO:${RESET} Project Details" 
-	@echo -e "${BLUE} INFO:${RESET} Compiler flags: $(CPPFLAGS) $(CXXFLAGS)"
-	@echo -e "${BLUE} INFO:${RESET} Linker flags  : $(LDFLAGS)"
-	@echo -e "${BLUE} INFO:${RESET} Link Libraries: $(LDLIBS)"
-	@echo -e "${BLUE} INFO:${RESET} project name  : $(EXE_NAME)"
-	@echo -e "${BLUE} INFO:${RESET} host system   : $(OS)"
-	
+	@echo -e "${YELLOW} INFO:${RESET} Compiler flags: $(CPPFLAGS) $(CXXFLAGS)"
+	@echo -e "${YELLOW} INFO:${RESET} Linker flags  : $(LDFLAGS)"
+	@echo -e "${YELLOW} INFO:${RESET} Link Libraries: $(LDLIBS)"
+	@echo -e "${YELLOW} INFO:${RESET} project name  : $(EXE_NAME)"
+	@echo -e "${YELLOW} INFO:${RESET} host system   : $(OS)"
+	@echo -e ""
+
 # --------------------------------------------------------------------------------
 .PHONY: compile
 compile: setup_project 
 	@echo -e "${BLUE} INFO:${RESET} Compling Sources Files"
-	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(SRCS) -o $(OBJS)
-	@echo -e "${BLUE} INFO:${RESET} Compilation Successful"
+	@mkdir -p $(CPP_OBJ_DIR)
+	@$(foreach src,$(SRCS), \
+		echo -e "${MAGENTA} INFO:${RESET} Compiling: $(abspath $(src))"; \
+		$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(src) -o $(CPP_OBJ_DIR)/$(notdir $(src:.cpp=.o)); \
+	)
+	@echo -e "${GREEN} INFO:${RESET} Compilation Successful"
+	@echo -e ""
 
 # --------------------------------------------------------------------------------
 .PHONY: link
 link: compile
 	@echo -e "${BLUE} INFO:${RESET} Linking object to executable"
 	@$(CXX) $(LDFLAGS) $(OBJS) $(LDLIBS) -o $(CPP_BIN_DIR)/$(EXE_NAME)
-	@echo -e "${BLUE} INFO:${RESET} Linking Successful"
+	@echo -e "${GREEN} INFO:${RESET} Linking Successful"
+	@echo -e ""
 
 # --------------------------------------------------------------------------------
 .PHONY: run
 run: all
 	@echo -e "${BLUE} INFO:${RESET} Executing program: $(CPP_BIN_DIR)/$(EXE_NAME)"
 	@cd $(CPP_BIN_DIR); ./$(EXE_NAME); cd $(CFG_PRJ_DIR)
-	@echo -e "${BLUE} INFO:${RESET} Program finished"
+	@echo -e "${GREEN} INFO:${RESET} Program finished"
+	@echo -e ""
 
 # --------------------------------------------------------------------------------
 .PHONY: clean
@@ -157,17 +166,19 @@ clean:
 	@if [ "$(shell dirname $(CPP_CLS_DIR))" = "$(CFG_PRJ_DIR)" ]; then \
 		echo -e "${BLUE} INFO:${RESET} Removing build directory $(CPP_CLS_DIR)"; \
 		rm -rf $(CPP_CLS_DIR); \
-		echo -e "${BLUE} INFO:${RESET} Cleaning done."; \
+		echo -e "${GREEN} INFO:${RESET} Cleaning done."; \
 	else \
 		echo -e "${RED} ERROR:${RESET} Invalid build directory specified: $(CPP_CLS_DIR)"; \
 	fi
+	@echo -e ""
 
 # --------------------------------------------------------------------------------
 .PHONY: install
 install: all setup_resources
 	@echo -e "${BLUE} INFO:${RESET} Packaging program to $(CPP_INS_DIR)"
 	@mkdir -p $(CPP_INS_DIR); cp -r $(CPP_BIN_DIR)/. $(CPP_INS_DIR)
-	@echo -e "${BLUE} INFO:${RESET} Packaging done."
+	@echo -e "${GREEN} INFO:${RESET} Packaging done."
+	@echo -e ""
 
 # --------------------------------------------------------------------------------
 .PHONY: setup_resources
@@ -176,8 +187,9 @@ setup_resources:
 	@mkdir -p $(CPP_BIN_DIR)
 	@cp -r $(CFG_RES_DIR)/. $(CPP_BIN_DIR)/
 	@cp -r $(CFG_RES_DIR)/. $(CPP_BIN_DIR)/ 2> /dev/null || :	
-	@echo -e "${BLUE} INFO:${RESET} Resources copied."
-
+	@echo -e "${GREEN} INFO:${RESET} Resources copied."
+	@echo -e ""
+	
 # --------------------------------------------------------------------------------
 .PHONY: help
 help: 
