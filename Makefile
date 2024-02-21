@@ -29,7 +29,7 @@ CFG_SRC_FILES = *.cpp
 CFG_OS_INCLUDES =
 CFG_RELEASE_FLAGS = -O3 -DNDEBUG
 CFG_DEBUG_FLAGS = -O0 -g
-
+ECHO = echo
 # --------------------------------------------------------------------------------
 # Project settings
 # --------------------------------------------------------------------------------
@@ -64,6 +64,7 @@ else
 		LDLIBS +=
 		CXXFLAGS +=
 		CPPFLAGS +=
+		ECHO = $(ECHO)
 	else ifeq ($(UNAME),Linux)
 		OS = linux
 		EXE_NAME = $(CFG_EXE_NAME)
@@ -103,121 +104,128 @@ CPPFLAGS += $(INCS)
 # --------------------------------------------------------------------------------
 .PHONY: all
 all: setup_project compile link setup_resources
-	@echo -e "${GREEN} INFO:${RESET} Build Successful"
-	@echo -e ""
+	@$(ECHO) "${GREEN} INFO:${RESET} Build Successful"
+	@$(ECHO) ""
 
 # --------------------------------------------------------------------------------
 .PHONY: setup_project
 setup_project:
-	@echo -e "${BLUE} INFO:${RESET} Setting up the project."
-	@echo -e "${YELLOW} INFO:${RESET} Create dir: $(CPP_BIN_DIR)"
+	@$(ECHO) "${BLUE} INFO:${RESET} Setting up the project."
+	@$(ECHO) "${YELLOW} INFO:${RESET} Create dir: $(CPP_BIN_DIR)"
 	@mkdir -p $(CPP_BIN_DIR)
-	@echo -e "${YELLOW} INFO:${RESET} Create dir: $(CPP_OBJ_DIR)"
+	@$(ECHO) "${YELLOW} INFO:${RESET} Create dir: $(CPP_OBJ_DIR)"
 	@mkdir -p $(CPP_OBJ_DIR)
-	@echo -e "${YELLOW} INFO:${RESET} Create dir: $(CPP_LIB_DIR)"
+	@$(ECHO) "${YELLOW} INFO:${RESET} Create dir: $(CPP_LIB_DIR)"
 	@mkdir -p $(CPP_LIB_DIR)
-	@echo -e "${YELLOW} INFO:${RESET} Create dir: $(CPP_INS_DIR)"
+	@$(ECHO) "${YELLOW} INFO:${RESET} Create dir: $(CPP_INS_DIR)"
 	@mkdir -p $(CPP_INS_DIR)
-	@echo -e "${YELLOW} INFO:${RESET} Create dir: $(CPP_EXT_DIR)"
+	@$(ECHO) "${YELLOW} INFO:${RESET} Create dir: $(CPP_EXT_DIR)"
 	@mkdir -p $(CPP_EXT_DIR)
-	@echo -e "${GREEN} INFO:${RESET} Setup Successful"
-	@echo -e ""
-	@echo -e "${BLUE} INFO:${RESET} Project Details" 
-	@echo -e "${YELLOW} INFO:${RESET} Compiler flags: $(CPPFLAGS) $(CXXFLAGS)"
-	@echo -e "${YELLOW} INFO:${RESET} Linker flags  : $(LDFLAGS)"
-	@echo -e "${YELLOW} INFO:${RESET} Link Libraries: $(LDLIBS)"
-	@echo -e "${YELLOW} INFO:${RESET} project name  : $(EXE_NAME)"
-	@echo -e "${YELLOW} INFO:${RESET} host system   : $(OS)"
-	@echo -e ""
+	@$(ECHO) "${GREEN} INFO:${RESET} Setup Successful"
+	@$(ECHO) ""
+	@$(ECHO) "${BLUE} INFO:${RESET} Project Details" 
+	@$(ECHO) "${YELLOW} INFO:${RESET} Compiler flags: $(CPPFLAGS) $(CXXFLAGS)"
+	@$(ECHO) "${YELLOW} INFO:${RESET} Linker flags  : $(LDFLAGS)"
+	@$(ECHO) "${YELLOW} INFO:${RESET} Link Libraries: $(LDLIBS)"
+	@$(ECHO) "${YELLOW} INFO:${RESET} project name  : $(EXE_NAME)"
+	@$(ECHO) "${YELLOW} INFO:${RESET} host system   : $(OS)"
+	@$(ECHO) ""
 
 # --------------------------------------------------------------------------------
 .PHONY: compile
 compile: setup_project 
-	@echo -e "${BLUE} INFO:${RESET} Compling Sources Files"
+	@$(ECHO) "${BLUE} INFO:${RESET} Compling Sources Files"
 	@mkdir -p $(CPP_OBJ_DIR)
 	@$(foreach src,$(SRCS), \
-		echo -e "${MAGENTA} INFO:${RESET} Compiling: $(abspath $(src))"; \
+		$(ECHO) "${MAGENTA} INFO:${RESET} Compiling: $(abspath $(src))"; \
 		$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(src) -o $(CPP_OBJ_DIR)/$(notdir $(src:.cpp=.o)); \
 	)
-	@echo -e "${GREEN} INFO:${RESET} Compilation Successful"
-	@echo -e ""
+	@$(ECHO) "${GREEN} INFO:${RESET} Compilation Successful"
+	@$(ECHO) ""
 
 # --------------------------------------------------------------------------------
 .PHONY: link
 link: compile
-	@echo -e "${BLUE} INFO:${RESET} Linking object to executable"
+	@$(ECHO) "${BLUE} INFO:${RESET} Linking object to executable"
 	@$(CXX) $(LDFLAGS) $(OBJS) $(LDLIBS) -o $(CPP_BIN_DIR)/$(EXE_NAME)
-	@echo -e "${GREEN} INFO:${RESET} Linking Successful"
-	@echo -e ""
+	@$(ECHO) "${GREEN} INFO:${RESET} Linking Successful"
+	@$(ECHO) ""
 
 # --------------------------------------------------------------------------------
 .PHONY: run
 run: all
-	@echo -e "${BLUE} INFO:${RESET} Executing program: $(CPP_BIN_DIR)/$(EXE_NAME)"
+	@$(ECHO) "${BLUE} INFO:${RESET} Executing program: $(CPP_BIN_DIR)/$(EXE_NAME)"
 	@cd $(CPP_BIN_DIR); ./$(EXE_NAME); cd $(CFG_PRJ_DIR)
-	@echo -e "${GREEN} INFO:${RESET} Program finished"
-	@echo -e ""
+	@$(ECHO) "${GREEN} INFO:${RESET} Program finished"
+	@$(ECHO) ""
 
 # --------------------------------------------------------------------------------
 .PHONY: clean
 clean:
-	@echo -e "${BLUE} INFO:${RESET} Try to clean up build directory $(CPP_CLS_DIR)"
+	@$(ECHO) "${BLUE} INFO:${RESET} Try to clean up build directory $(CPP_CLS_DIR)"
 
 	@if [ "$(shell dirname $(CPP_CLS_DIR))" = "$(CFG_PRJ_DIR)" ]; then \
-		echo -e "${BLUE} INFO:${RESET} Removing build directory $(CPP_CLS_DIR)"; \
+		$(ECHO) "${BLUE} INFO:${RESET} Removing build directory $(CPP_CLS_DIR)"; \
 		rm -rf $(CPP_CLS_DIR); \
-		echo -e "${GREEN} INFO:${RESET} Cleaning done."; \
+		$(ECHO) "${GREEN} INFO:${RESET} Cleaning done."; \
 	else \
-		echo -e "${RED} ERROR:${RESET} Invalid build directory specified: $(CPP_CLS_DIR)"; \
+		$(ECHO) "${RED} ERROR:${RESET} Invalid build directory specified: $(CPP_CLS_DIR)"; \
 	fi
-	@echo -e ""
+	@$(ECHO) ""
 
 # --------------------------------------------------------------------------------
 .PHONY: install
 install: all setup_resources
-	@echo -e "${BLUE} INFO:${RESET} Packaging program to $(CPP_INS_DIR)"
+	@$(ECHO) "${BLUE} INFO:${RESET} Packaging program to $(CPP_INS_DIR)"
 	@mkdir -p $(CPP_INS_DIR); cp -r $(CPP_BIN_DIR)/. $(CPP_INS_DIR)
-	@echo -e "${GREEN} INFO:${RESET} Packaging done."
-	@echo -e ""
+	@$(ECHO) "${GREEN} INFO:${RESET} Packaging done."
+	@$(ECHO) ""
 
 # --------------------------------------------------------------------------------
 .PHONY: setup_resources
 setup_resources:
-	@echo -e "${BLUE} INFO:${RESET} Copying resources from $(CFG_RES_DIR) to $(CPP_BIN_DIR)"
+	@$(ECHO) "${BLUE} INFO:${RESET} Copying resources from $(CFG_RES_DIR) to $(CPP_BIN_DIR)"
 	@mkdir -p $(CPP_BIN_DIR)
 	@cp -r $(CFG_RES_DIR)/. $(CPP_BIN_DIR)/
 	@cp -r $(CFG_RES_DIR)/. $(CPP_BIN_DIR)/ 2> /dev/null || :	
-	@echo -e "${GREEN} INFO:${RESET} Resources copied."
-	@echo -e ""
-	
+	@$(ECHO) "${GREEN} INFO:${RESET} Resources copied."
+	@$(ECHO) ""
+
+.PHONY:
+format:
+	@$(ECHO) "${BLUE} INFO:${RESET} Formatting source files"
+	@clang-format -i -style=Microsoft $(CFG_SRC_DIR)/*.cpp $(CFG_INC_DIR)/*.h
+	@$(ECHO) "${GREEN} INFO:${RESET} Formatting done."
+	@$(ECHO) ""
+
 # --------------------------------------------------------------------------------
 .PHONY: help
 help: 
-	@echo -e " "
-	@echo -e "Usage: $(MAGENTA)make${RESET} ${GREEN}[target]${RESET} $(YELLOW)[options]${RESET}"
-	@echo -e " "
-	@echo -e "Targets:"
-	@echo -e "  ${GREEN}all     ${RESET}- (default) compiles and links the program"
-	@echo -e "  ${GREEN}setup   ${RESET}- creates the build directory structure"
-	@echo -e "  ${GREEN}compile ${RESET}- compiles the source files"
-	@echo -e "  ${GREEN}link    ${RESET}- links the object files"
-	@echo -e "  ${GREEN}run     ${RESET}- runs the program"
-	@echo -e "  ${GREEN}clean   ${RESET}- removes the build directory"
-	@echo -e "  ${GREEN}install ${RESET}- packages the program to the install directory"
-	@echo -e "  ${GREEN}help    ${RESET}- prints this help message"
-	@echo -e " "
-	@echo -e "Options:"
-	@echo -e "  $(YELLOW)release=1 ${RESET} - compiles the program in release mode"
-	@echo -e " "
-	@echo -e "Examples:"
-	@echo -e " $(MAGENTA)make ${RESET}"
-	@echo -e " $(MAGENTA)make ${RESET}${GREEN}all       ${RESET}"
-	@echo -e " $(MAGENTA)make ${RESET}${GREEN}release=1 ${RESET}"
-	@echo -e " $(MAGENTA)make ${RESET}${GREEN}clean     ${RESET}"
-	@echo -e " $(MAGENTA)make ${RESET}${GREEN}install   ${RESET}"
-	@echo -e " $(MAGENTA)make ${RESET}${GREEN}help      ${RESET}"
-	@echo -e " $(MAGENTA)make ${RESET}${GREEN}run       ${RESET}"
-	@echo -e " $(MAGENTA)make ${RESET}${GREEN}setup     ${RESET}"
-	@echo -e " "
+	@$(ECHO) " "
+	@$(ECHO) "Usage: $(MAGENTA)make${RESET} ${GREEN}[target]${RESET} $(YELLOW)[options]${RESET}"
+	@$(ECHO) " "
+	@$(ECHO) "Targets:"
+	@$(ECHO) "  ${GREEN}all     ${RESET}- (default) compiles and links the program"
+	@$(ECHO) "  ${GREEN}setup   ${RESET}- creates the build directory structure"
+	@$(ECHO) "  ${GREEN}compile ${RESET}- compiles the source files"
+	@$(ECHO) "  ${GREEN}link    ${RESET}- links the object files"
+	@$(ECHO) "  ${GREEN}run     ${RESET}- runs the program"
+	@$(ECHO) "  ${GREEN}clean   ${RESET}- removes the build directory"
+	@$(ECHO) "  ${GREEN}install ${RESET}- packages the program to the install directory"
+	@$(ECHO) "  ${GREEN}help    ${RESET}- prints this help message"
+	@$(ECHO) " "
+	@$(ECHO) "Options:"
+	@$(ECHO) "  $(YELLOW)release=1 ${RESET} - compiles the program in release mode"
+	@$(ECHO) " "
+	@$(ECHO) "Examples:"
+	@$(ECHO) " $(MAGENTA)make ${RESET}"
+	@$(ECHO) " $(MAGENTA)make ${RESET}${GREEN}all       ${RESET}"
+	@$(ECHO) " $(MAGENTA)make ${RESET}${GREEN}release=1 ${RESET}"
+	@$(ECHO) " $(MAGENTA)make ${RESET}${GREEN}clean     ${RESET}"
+	@$(ECHO) " $(MAGENTA)make ${RESET}${GREEN}install   ${RESET}"
+	@$(ECHO) " $(MAGENTA)make ${RESET}${GREEN}help      ${RESET}"
+	@$(ECHO) " $(MAGENTA)make ${RESET}${GREEN}run       ${RESET}"
+	@$(ECHO) " $(MAGENTA)make ${RESET}${GREEN}setup     ${RESET}"
+	@$(ECHO) " "
 
 # --------------------------------------------------------------------------------
