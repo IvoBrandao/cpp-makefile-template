@@ -64,7 +64,6 @@ else
 		LDLIBS +=
 		CXXFLAGS +=
 		CPPFLAGS +=
-		ECHO = $(ECHO)
 	else ifeq ($(UNAME),Linux)
 		OS = linux
 		EXE_NAME = $(CFG_EXE_NAME)
