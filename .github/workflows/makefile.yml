@@ -8,23 +8,46 @@ on:
 
 jobs:
   build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
     - name: Install dependencies
-      run: sudo chmod 777 ./configure && ./configure
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt update
+        sudo apt install -y build-essential gcc g++ make
 
     - name: Install dependencies
-      run: make
+      if: matrix.os == 'windows-latest'
+      run: |
+        choco install make
+        choco install mingw
 
-    - name: Run check
-      run: make run
+    - name: Install dependencies
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew update
+        brew install gcc make
 
-    - name: Run install
-      run: make install
+    - name: Build
+      run: |
+        make
+
+    - name: Run checks
+      run: |
+        make run
+
+    - name: Install
+      run: |
+        make install
 
     - name: Run tests
-      run: make test
+      run: |
+        make test
