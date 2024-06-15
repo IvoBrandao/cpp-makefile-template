@@ -228,12 +228,25 @@ compile:
 # Linking the object files
 # --------------------------------------------------------------------------------
 
+#.PHONY: link
+#link: compile
+#	@$(ECHO) " --------------------------------------------------------------------------------"
+#	@$(ECHO) "${BLUE} INFO:${RESET} Linking object to executable"
+#	@$(CXX) $(LDFLAGS) $(OBJS) $(LDLIBS) -o $(CPP_BIN_DIR)/$(EXE_NAME)
+#	@$(ECHO) "${GREEN} INFO:${RESET} Linking Successful"
+
+
 .PHONY: link
 link: compile
 	@$(ECHO) " --------------------------------------------------------------------------------"
 	@$(ECHO) "${BLUE} INFO:${RESET} Linking object to executable"
+	@$(foreach obj,$(OBJS), \
+		$(ECHO) "${MAGENTA} INFO:${RESET} Linkiing: $(abspath $(obj))"; \
+	)
 	@$(CXX) $(LDFLAGS) $(OBJS) $(LDLIBS) -o $(CPP_BIN_DIR)/$(EXE_NAME)
 	@$(ECHO) "${GREEN} INFO:${RESET} Linking Successful"
+
+
 
 
 # --------------------------------------------------------------------------------
