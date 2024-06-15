@@ -1,6 +1,8 @@
 # Cross platform CPP Make file template
 
-This is a C++ project template with a Makefile to automate the build process. It provides a convenient structure to organize C++ projects and supports both debug and release modes. It it usefull for small prototype projects.
+This is a C++ project template with a Makefile to automate the build process. 
+It provides a convenient structure to organize C++ projects and supports both debug and release modes. 
+It it usefull for small prototype projects.
 
 [![Makefile CI](https://github.com/IvoBrandao/cpp-makefile-template/actions/workflows/makefile.yml/badge.svg)](https://github.com/IvoBrandao/cpp-makefile-template/actions/workflows/makefile.yml)
 
@@ -12,7 +14,23 @@ This is a C++ project template with a Makefile to automate the build process. It
 ## Getting Started
 
 1. Clone or download this repository to your local machine.
+
+    ```sh
+    git clone git@github.com:IvoBrandao/cpp-makefile-template.git <Tiny Project Name>
+    ```
+
 2. Navigate to the project directory.
+
+    ```sh
+
+    cd <Tiny Project Name>
+    ```
+
+3. Execute help to see the available commands
+
+    ```bash
+    make help
+    ```
 
 ## Project Structure
 
@@ -53,7 +71,6 @@ To package the program for installation, use the following command:
     make install
     ```
 
-This will create an install directory in the project folder containing the compiled executable and any resource files. You can then distribute this directory as needed.
 
 ## Configuration
 
