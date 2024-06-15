@@ -184,7 +184,7 @@ TST_LDLIBS := $(GTEST_LIB) -lgtest -lgtest_main -lgmock -lgmock_main
 # --------------------------------------------------------------------------------
 
 .PHONY: all
-all: resources format build test_build
+all: resources build test_build
 	@$(ECHO) " --------------------------------------------------------------------------------"
 	@$(ECHO) "${GREEN} INFO:${RESET} Build Successful"
 # --------------------------------------------------------------------------------
