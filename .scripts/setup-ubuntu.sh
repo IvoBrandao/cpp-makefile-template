@@ -7,5 +7,5 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 # Update package list and install the tools
-sudo apt update && sudo apt install build-essential gcc g++ make -y
+sudo apt update && sudo apt install build-essential gcc g++ make doxygen -y
 

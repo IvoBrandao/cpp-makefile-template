@@ -12,7 +12,11 @@ RESET=\033[0m
 # --------------------------------------------------------------------------------
 # Configuration
 # --------------------------------------------------------------------------------
-
+CFG_PRJ_DIR = $(shell pwd)
+# Configures the Google Test directory URL
+CFG_GTEST_DIR_URL = https://github.com/google/googletest.git
+# Configures the Doxygen configuration file
+CFG_DOXYFILE = $(CFG_PRJ_DIR)/Doxyfile
 # Configures the build directory location
 CFG_BLD_OUT_DIR = build
 # Configures the directory for external projects
@@ -67,7 +71,6 @@ ECHO = echo
 # --------------------------------------------------------------------------------
 # Project settings
 # --------------------------------------------------------------------------------
-CFG_PRJ_DIR = $(shell pwd)
 CFG_INC_DIR = $(CFG_PRJ_DIR)/include
 CFG_SRC_DIR = $(CFG_PRJ_DIR)/source
 CFG_RES_DIR = $(CFG_PRJ_DIR)/resources
@@ -138,6 +141,7 @@ CPP_OBJ_DIR = $(CPP_BLD_DIR)/$(CFG_OBJ_OUT_DIR)/app
 CPP_LIB_DIR = $(CPP_BLD_DIR)/$(CFG_LIB_OUT_DIR)/app
 CPP_INS_DIR = $(CPP_BLD_DIR)/$(CFG_INS_OUT_DIR)/app
 CPP_EXT_DIR = $(CPP_BLD_DIR)/$(CFG_EXT_OUT_DIR)/app
+CPP_BLD_DOC = $(CPP_BLD_DIR)/doc
 
 SRCS := $(sort $(shell find $(CFG_SRC_DIR) -name $(CFG_SRC_FILES)))
 INCS := -I$(CFG_INC_DIR) -I$(CFG_SRC_DIR) -I$(CFG_OS_INCLUDES)
@@ -174,7 +178,7 @@ TST_BINS := $(TST_SRCS:$(TST_SRC_DIR)/%.cpp=$(TST_BIN_DIR)/$(CFG_TST_EXE_PREFIX)
 
 # Compiler and linker flags
 TST_COMPILER := $(CFG_CXX_COMP)
-TST_CPPFLAGS := -MMD -MP -I$(TST_INC_DIR) -I$(GTEST_INCLUDE)
+TST_CPPFLAGS := -MMD -MP -I$(TST_INC_DIR) -I$(GTEST_INCLUDE) -I$(CFG_INC_DIR) -I$(CFG_SRC_DIR)
 TST_CXXFLAGS := -std=c++2b -O0 -g
 TST_LDFLAGS := -pthread -L$(TST_LIB_DIR)
 TST_LDLIBS := $(GTEST_LIB) -lgtest -lgtest_main -lgmock -lgmock_main
@@ -186,14 +190,13 @@ TST_LDLIBS := $(GTEST_LIB) -lgtest -lgtest_main -lgmock -lgmock_main
 
 .PHONY: all
 all: resources build
-	@$(ECHO) " --------------------------------------------------------------------------------"
+
 	@$(ECHO) "${GREEN} INFO:${RESET} Build Successful"
 # --------------------------------------------------------------------------------
 # Setting up the project directories
 # --------------------------------------------------------------------------------
 .PHONY: setup_app
 setup_app: 
-	@$(ECHO) " --------------------------------------------------------------------------------"
 	@$(ECHO) "${BLUE} INFO:${RESET} Setting up the project."
 	@$(ECHO) "${YELLOW} INFO:${RESET} Create dir: $(CPP_BIN_DIR)"
 	@mkdir -p $(CPP_BIN_DIR)
@@ -216,7 +219,6 @@ setup_app:
 
 .PHONY: compile
 compile:  
-	@$(ECHO) " --------------------------------------------------------------------------------"
 	@$(ECHO) "${BLUE} INFO:${RESET} Compling Sources Files"
 	@mkdir -p $(CPP_OBJ_DIR)
 	@$(foreach src,$(SRCS), \
@@ -231,7 +233,6 @@ compile:
 
 .PHONY: link
 link: compile
-	@$(ECHO) " --------------------------------------------------------------------------------"
 	@$(ECHO) "${BLUE} INFO:${RESET} Linking object to executable"
 	@$(foreach obj,$(OBJS), \
 		$(ECHO) "${MAGENTA} INFO:${RESET} Linkiing: $(abspath $(obj))"; \
@@ -244,7 +245,6 @@ link: compile
 # --------------------------------------------------------------------------------
 .phony: build
 build: setup_app link
-	@$(ECHO) " --------------------------------------------------------------------------------"
 	@$(ECHO) "${GREEN} INFO:${RESET} Build Successful"
 
 # --------------------------------------------------------------------------------
@@ -253,7 +253,6 @@ build: setup_app link
 
 .PHONY: run
 run: all
-	@$(ECHO) " --------------------------------------------------------------------------------"
 	@$(ECHO) "${BLUE} INFO:${RESET} Executing program: $(CPP_BIN_DIR)/$(EXE_NAME)"
 	@cd $(CPP_BIN_DIR); ./$(EXE_NAME); cd $(CFG_PRJ_DIR)
 	@$(ECHO) "${GREEN} INFO:${RESET} Program finished"
@@ -264,7 +263,6 @@ run: all
 
 .PHONY: clean
 clean:
-	@$(ECHO) " --------------------------------------------------------------------------------"
 	@$(ECHO) "${BLUE} INFO:${RESET} Try to clean up build directory $(CPP_CLS_DIR)"
 	@rm -rf $(CPP_CLS_DIR)
 	@if [ ! -d "$(CPP_CLS_DIR)" ]; then \
@@ -279,7 +277,6 @@ clean:
 
 .PHONY: install
 install: all resources
-	@$(ECHO) " --------------------------------------------------------------------------------"
 	@$(ECHO) "${BLUE} INFO:${RESET} Packaging program to $(CPP_INS_DIR)"
 	@mkdir -p $(CPP_INS_DIR); cp -r $(CPP_BIN_DIR)/. $(CPP_INS_DIR)
 	@$(ECHO) "${GREEN} INFO:${RESET} Packaging done."
@@ -290,7 +287,6 @@ install: all resources
 
 .PHONY: resources
 resources:
-	@$(ECHO) " --------------------------------------------------------------------------------"
 	@$(ECHO) "${BLUE} INFO:${RESET} Copying resources from $(CFG_RES_DIR) to $(CPP_BIN_DIR)"
 	@mkdir -p $(CPP_BIN_DIR)
 	@cp -r $(CFG_RES_DIR)/. $(CPP_BIN_DIR)/
@@ -303,7 +299,6 @@ resources:
 
 .PHONY: format
 format:
-	@$(ECHO) " --------------------------------------------------------------------------------"
 	@$(ECHO) "${BLUE} INFO:${RESET} Formatting source files"
 	@if [ ! -f ".clang-format" ]; then \
 		echo "${BLUE} INFO:${RESET} Creating .clang-format file"; \
@@ -334,7 +329,6 @@ format:
 
 .PHONY: test_setup
 test_setup:
-	@$(ECHO) " --------------------------------------------------------------------------------"
 	@$(ECHO) "${BLUE} INFO:${RESET} Setting up test project."
 	@mkdir -p $(TST_BIN_DIR) $(TST_OBJ_DIR) $(TST_LIB_DIR) $(TST_INS_DIR) $(TST_EXT_DIR)
 	@$(ECHO) "${GREEN} INFO:${RESET} Setup Successful"
@@ -347,14 +341,13 @@ test_setup:
 	@$(ECHO) "${BLUE} INFO:${RESET} Setting up Google Test framework"
 	@if [ ! -d "$(GTEST_DIR)" ]; then \
 		echo "${YELLOW} INFO:${RESET} Cloning Google Test"; \
-		git clone https://github.com/google/googletest.git $(GTEST_DIR); \
+		git clone $(CFG_GTEST_DIR_URL) $(GTEST_DIR)  > /dev/null 2>&1; \
 	else \
 		echo "${GREEN} INFO:${RESET} Google Test already exists"; \
 	fi
-
 	@$(ECHO) "${BLUE} INFO:${RESET} Building Google Test"
 	@mkdir -p $(GTEST_DIR)/build
-	@cd $(GTEST_DIR)/build && cmake .. && make > /dev/null
+	@cd $(GTEST_DIR)/build && cmake ..  > /dev/null 2>&1 && make > /dev/null 2>&1;
 	@$(ECHO) "${YELLOW} INFO:${RESET} Copying Google Test/Google Mock libraries"
 	@cp $(GTEST_LIB) $(TST_LIB_DIR)
 	@cp $(GMOCK_LIB) $(TST_LIB_DIR)
@@ -368,12 +361,11 @@ test_setup:
 
 .PHONY: test_compile
 test_compile: test_setup $(TST_OBJS)
-	@$(ECHO) " --------------------------------------------------------------------------------"
 	@$(ECHO) "${GREEN} INFO:${RESET} Compilation Successful"
 $(TST_OBJ_DIR)/%.o: $(TST_SRC_DIR)/%.cpp
 	@$(ECHO) "${YELLOW} INFO:${RESET} Compiling $<"
 	@mkdir -p $(dir $@)
-	$(TST_COMPILER) $(TST_CPPFLAGS) $(TST_CXXFLAGS) -c $< -o $@
+	$(TST_COMPILER) $(TST_CPPFLAGS) $(TST_CXXFLAGS) -c $< -o $@ 
 
 -include $(DEPS)
 
@@ -384,13 +376,12 @@ $(TST_OBJ_DIR)/%.o: $(TST_SRC_DIR)/%.cpp
 
 .PHONY: test_link
 test_link: test_compile $(TST_BINS)
-	@$(ECHO) " --------------------------------------------------------------------------------"
 	@$(ECHO) "${GREEN} INFO:${RESET} Linking Successful"
 
 $(TST_BIN_DIR)/$(CFG_TST_EXE_PREFIX)%: $(TST_OBJ_DIR)/%.o
 	@$(ECHO) "${YELLOW} INFO:${RESET} Linking $@"
 	@mkdir -p $(dir $@)
-	$(TST_COMPILER) $< $(TST_LDFLAGS) $(TST_LDLIBS) -o $@
+	$(TST_COMPILER) $< $(TST_LDFLAGS) $(TST_LDLIBS) -o $@ 
 
 # --------------------------------------------------------------------------------
 # test build
@@ -398,25 +389,33 @@ $(TST_BIN_DIR)/$(CFG_TST_EXE_PREFIX)%: $(TST_OBJ_DIR)/%.o
 
 .PHONY: test_build
 test_build: test_setup test_compile test_link
-	@$(ECHO) " --------------------------------------------------------------------------------"
 	@$(ECHO) "${GREEN} INFO:${RESET} Build Successful"
-	@$(ECHO) ""
+
 
 # --------------------------------------------------------------------------------
 # test run
 # --------------------------------------------------------------------------------
-
-.PHONY: test
-test: test_link
-	@$(ECHO) " --------------------------------------------------------------------------------"
+.PHONY: test_run
+test_run: test_build
 	@$(ECHO) "${GREEN} INFO:${RESET} Running all tests"
-
 	@for test_bin in $(TST_BINS); do \
 		echo "${YELLOW} INFO:${RESET} Running $$test_bin"; \
-		$$test_bin; \
+		if ! $$test_bin; then \
+			echo "${RED} ERROR:${RESET} Test $$test_bin failed"; \
+			exit 1; \
+		fi; \
 	done
-
 	@$(ECHO) "${GREEN} INFO:${RESET} All tests Executed"
+
+
+
+# --------------------------------------------------------------------------------
+# test build and run
+# --------------------------------------------------------------------------------
+
+.PHONY: test
+test: test_run
+	@$(ECHO) "${GREEN} INFO:${RESET} Test Executed"
 
 # --------------------------------------------------------------------------------
 # test clean
@@ -424,10 +423,37 @@ test: test_link
 
 .PHONY: test_clean
 test_clean:
-	@$(ECHO) " --------------------------------------------------------------------------------"
 	@$(ECHO) "${BLUE} INFO:${RESET} Cleaning up"
 	@rm -rf $(TST_BIN_DIR) $(TST_OBJ_DIR) $(TST_LIB_DIR) $(TST_INS_DIR) $(TST_EXT_DIR)
 	@$(ECHO) "${GREEN} INFO:${RESET} Clean complete"
+
+# --------------------------------------------------------------------------------
+# documentation setup
+# --------------------------------------------------------------------------------
+.PHONY: setup_doc
+setup_doc:
+	@echo "Generating default Doxygen configuration..."
+	@doxygen -g $(DOXYFILE)
+	@echo "Default Doxygen configuration generated as $(DOXYFILE)"
+
+# --------------------------------------------------------------------------------
+# documentation
+# --------------------------------------------------------------------------------
+.PHONY: doc
+doc:
+	@echo "Generating documentation..."
+	@mkdir -p $(CPP_BLD_DOC)
+	@echo "Documentation will be generated in $(CPP_BLD_DOC)"
+	@echo "Using Doxygen configuration: $(CFG_DOXYFILE)"
+	@cd $(CPP_BLD_DOC) && doxygen $(DOXYFILE) . > /dev/null 2>&1
+	@echo "Documentation generated in $(CPP_BLD_DOC)/html/index.html"
+
+
+.PHONY: clean_doc
+clean_doc:
+	@echo "Cleaning up documentation..."
+	@rm -rf $(CPP_BLD_DOC)
+	@echo "Documentation cleaned up."
 
 # --------------------------------------------------------------------------------
 # Help 
@@ -449,12 +475,16 @@ help:
 	@$(ECHO) "  ${GREEN}install      ${RESET}- packages the program to the install directory"
 	@$(ECHO) "  ${GREEN}resources    ${RESET}- copies the resources to the binary directory"
 	@$(ECHO) "  ${GREEN}format       ${RESET}- formats the source files"
+	@$(ECHO) "  ${GREEN}doc          ${RESET}- generates the documentation"
+	@$(ECHO) "  ${GREEN}setup_doc    ${RESET}- generates the default Doxygen configuration"
+	@$(ECHO) "  ${GREEN}clean_doc    ${RESET}- removes the documentation"
 	@$(ECHO) " "
 	@$(ECHO) "Test Targets: "
 	@$(ECHO) "  ${GREEN}test_setup   ${RESET}- sets up the test project"
 	@$(ECHO) "  ${GREEN}test_compile ${RESET}- compiles the test source files"
 	@$(ECHO) "  ${GREEN}test_link    ${RESET}- links the test object files"
 	@$(ECHO) "  ${GREEN}test_clean   ${RESET}- removes the test build directory"
+	@$(ECHO) "  ${GREEN}test_run     ${RESET}- runs all the tests"
 	@$(ECHO) "  ${GREEN}test         ${RESET}- builds and runs the tests"
 	@$(ECHO) "  ${GREEN}help         ${RESET}- prints this help message"
 	@$(ECHO) " "

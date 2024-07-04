@@ -4,8 +4,6 @@ This is a C++ project template with a Makefile to automate the build process.
 It provides a convenient structure to organize C++ projects and supports both debug and release modes. 
 It it usefull for small prototype projects.
 
-[![Makefile CI](https://github.com/IvoBrandao/cpp-makefile-template/actions/workflows/makefile.yml/badge.svg)](https://github.com/IvoBrandao/cpp-makefile-template/actions/workflows/makefile.yml)
-
 ## Prerequisites
 
 - C++ compiler (e.g., g++)
