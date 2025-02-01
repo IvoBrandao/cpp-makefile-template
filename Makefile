@@ -1,6 +1,4 @@
-# --------------------------------------------------------------------------------
-# Configuration
-# --------------------------------------------------------------------------------
+
 CFG_PRJ_DIR = $(shell pwd)
 # Configures the Google Test directory URL
 CFG_GTEST_DIR_URL = https://github.com/google/googletest.git
@@ -24,8 +22,6 @@ CFG_INS_OUT_DIR = install
 CFG_TST_DIR = tests
 # Configures the executable name
 CFG_EXE_NAME = app
-# Configures the test executable prefix
-CFG_TST_EXE_PREFIX = $(CFG_EXE_NAME)_test_
 # Configures the compiler
 CFG_CXX_COMP = g++
 # Configures the preprocessor flags
@@ -53,16 +49,13 @@ CFG_OS_INCLUDES =
 
 # Configures the release and debug flags
 # Release: optimize for speed, disable assertions, native architecture optimization, etc.
-CFG_RELEASE_FLAGS = -O3 -DNDEBUG -march=native -ftree-vectorize -msse2 -mfpmath=sse -ftree-vectorizer-verbose=5 -fopenmp -fopenacc -fopenmp-simd
+CFG_RELEASE_FLAGS = -O3 -DNDEBUG
 # Debug: no optimization, include debug symbols (simplified)
 CFG_DEBUG_FLAGS = -O0 -g
 
 # Code coverage flags (for gcov)
 CFG_COVERAGE_FLAGS = --coverage
 
-# --------------------------------------------------------------------------------
-# Project settings
-# --------------------------------------------------------------------------------
 CFG_INC_DIR = $(CFG_PRJ_DIR)/include
 CFG_SRC_DIR = $(CFG_PRJ_DIR)/source
 CFG_RES_DIR = $(CFG_PRJ_DIR)/resources
@@ -78,6 +71,8 @@ COMPILER = $(CFG_COMP)
 ifeq ($(OS),Windows_NT)
 	OS = windows
 	EXE_NAME = $(CFG_EXE_NAME).exe
+	# Configures the test executable prefix
+	CFG_TST_EXE_PREFIX = $(CFG_EXE_NAME)_test_
 	TST_EXE_EXT = .exe
 	# Windows specific settings (static linking for GCC on Windows)
 	LDFLAGS += -static-libgcc -static-libstdc++
@@ -91,6 +86,7 @@ else
 	ifeq ($(UNAME),Darwin)
 		OS = macos
 		EXE_NAME = $(CFG_EXE_NAME)
+  	CFG_TST_EXE_PREFIX = $(CFG_EXE_NAME)_test_
 		TST_EXE_EXT =
 		OS_INCLUDES := /usr/local/include
 		LDFLAGS += -L/usr/local/lib
@@ -101,11 +97,12 @@ else
 	else ifeq ($(UNAME),Linux)
 		OS = linux
 		EXE_NAME = $(CFG_EXE_NAME)
+		CFG_TST_EXE_PREFIX = $(CFG_EXE_NAME)_test_
 		TST_EXE_EXT =
 		OS_INCLUDES := /usr/local/include
 		LDFLAGS += -L/usr/local/lib -L/usr/lib
 		# (pthread - POSIX threads, m - math library)
-		LDLIBS += -lpthread -lm
+		LDLIBS += -lpthread -lm -march=native -ftree-vectorize -msse2 -mfpmath=sse -ftree-vectorizer-verbose=5 -fopenmp -fopenacc -fopenmp-simd
 		CXXFLAGS +=
 		CPPFLAGS +=
 	else
@@ -123,9 +120,6 @@ else
 	CXXFLAGS += $(CFG_DEBUG_FLAGS)
 endif
 
-# --------------------------------------------------------------------------------
-# main app settings
-# --------------------------------------------------------------------------------
 CPP_BLD_DIR = $(CFG_PRJ_DIR)/$(CFG_BLD_OUT_DIR)/$(OS)
 CPP_CLS_DIR = $(CFG_PRJ_DIR)/$(CFG_BLD_OUT_DIR)/$(OS)
 CPP_BIN_DIR = $(CPP_BLD_DIR)/$(CFG_BIN_OUT_DIR)/app
@@ -144,9 +138,6 @@ DEPS := $(OBJS:.o=.d)
 CPPFLAGS += $(INCS)
 LDFLAGS += $(LIBS)
 
-# --------------------------------------------------------------------------------
-# Test settings
-# --------------------------------------------------------------------------------
 # Define directories
 TST_BLD_DIR := $(CFG_PRJ_DIR)/$(CFG_BLD_OUT_DIR)/$(OS)
 TST_BIN_DIR := $(TST_BLD_DIR)/$(CFG_BIN_OUT_DIR)/tests
@@ -167,33 +158,30 @@ GMOCK_LIB := $(GTEST_DIR)/build/lib/libgmock.a $(GTEST_DIR)/build/lib/libgmock_m
 
 # Source files and objects for tests
 TST_SRCS := $(sort $(shell find $(TST_SRC_DIR) -name *.cpp))
+TST_INCS := -I$(TST_INC_DIR) -I$(CFG_INC_DIR)
 TST_OBJS := $(TST_SRCS:$(TST_SRC_DIR)/%.cpp=$(TST_OBJ_DIR)/%.o) $(DEPS)
 TST_DEPS := $(TST_OBJS:.o=.d)
+# Create the correct paths for test binaries
 TST_BINS := $(TST_SRCS:$(TST_SRC_DIR)/%.cpp=$(TST_BIN_DIR)/$(CFG_TST_EXE_PREFIX)%)
 
 # remove the main object from the list of objects to link for tests
 TST_OBJS += $(filter-out $(CPP_OBJ_DIR)/main.o, $(OBJS))
-
-TST_INCS := -I$(TST_INC_DIR) -I$(CFG_INC_DIR)
+TST_DEPS += $(filter-out $(CPP_OBJ_DIR)/main.d, $(DEPS))
 
 # Compiler and linker flags for tests
 TST_COMPILER := $(CFG_CXX_COMP)
 TST_CPPFLAGS := -MMD -MP -I$(TST_INC_DIR) -I$(GTEST_INCLUDE) $(TST_INCS)
 TST_CXXFLAGS := -std=c++2b -O0 -g
 TST_LDFLAGS := -pthread -L$(TST_LIB_DIR)
+# Add missing linking flags for Google Test and Google Mock in test linking stage
 TST_LDLIBS := $(GTEST_LIB) -lgtest -lgtest_main -lgmock -lgmock_main
 
 
-# --------------------------------------------------------------------------------
-# all Targets
-# --------------------------------------------------------------------------------
+
 .PHONY: all
 all: resources build
 	@echo "INFO: Build Successful"
 
-# --------------------------------------------------------------------------------
-# Setting up the project directories
-# --------------------------------------------------------------------------------
 .PHONY: setup_app
 setup_app:
 	@echo "INFO: Setting up the project."
@@ -212,10 +200,6 @@ setup_app:
 	@chmod -R u+w $(CFG_BLD_OUT_DIR)
 	@echo "INFO: Permissions set"
 
-# --------------------------------------------------------------------------------
-# Compiling the source files (now handled by pattern rules)
-# --------------------------------------------------------------------------------
-
 .PHONY: compile
 compile:
 	@echo "INFO: Compling Sources Files"
@@ -225,9 +209,7 @@ compile:
 		$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $(src) -o $(CPP_OBJ_DIR)/$(notdir $(src:.cpp=.o)); \
 	)
 	@echo "INFO: Compilation Successful"
-# --------------------------------------------------------------------------------
-# Linking the object files
-# --------------------------------------------------------------------------------
+
 .PHONY: link
 link: compile
 	@echo "INFO: Linking object files to create executable"
@@ -237,25 +219,16 @@ link: compile
 	@$(CXX) $(LDFLAGS) $(OBJS) $(LDLIBS) -o $(CPP_BIN_DIR)/$(EXE_NAME)
 	@echo "INFO: Linking Successful"
 
-# --------------------------------------------------------------------------------
-# Build the program
-# --------------------------------------------------------------------------------
 .PHONY: build
 build: setup_app link
 	@echo "INFO: Build Successful"
 
-# --------------------------------------------------------------------------------
-# Running the program
-# --------------------------------------------------------------------------------
 .PHONY: run
 run: all
 	@echo "INFO: Executing program: $(CPP_BIN_DIR)/$(EXE_NAME)"
 	@cd $(CPP_BIN_DIR); ./$(EXE_NAME); cd $(CFG_PRJ_DIR)
 	@echo "\nINFO: Program finished"
 
-# --------------------------------------------------------------------------------
-# Cleaning up the build directory
-# --------------------------------------------------------------------------------
 .PHONY: clean
 clean:
 	@echo "INFO: Cleaning up build directory $(CPP_CLS_DIR)"
@@ -266,18 +239,12 @@ clean:
 		echo "ERROR: Clean up failed"; \
 	fi
 
-# --------------------------------------------------------------------------------
-# Packaging the program to the install directory
-# --------------------------------------------------------------------------------
 .PHONY: install
 install: all resources
 	@echo "INFO: Packaging program to $(CPP_INS_DIR)"
 	@mkdir -p $(CPP_INS_DIR); cp -r $(CPP_BIN_DIR)/. $(CPP_INS_DIR)
 	@echo "INFO: Packaging done."
 
-# --------------------------------------------------------------------------------
-# Copying resources to the binary directory
-# --------------------------------------------------------------------------------
 .PHONY: resources
 resources:
 	@echo "INFO: Copying resources from $(CFG_RES_DIR) to $(CPP_BIN_DIR)"
@@ -286,9 +253,6 @@ resources:
 	@cp -r $(CFG_RES_DIR)/. $(CPP_BIN_DIR)/ 2> /dev/null || :
 	@echo "INFO: Resources copied."
 
-# --------------------------------------------------------------------------------
-# Formatting files
-# --------------------------------------------------------------------------------
 .PHONY: format
 format:
 	@echo "INFO: Formatting source files"
@@ -311,9 +275,6 @@ format:
 	fi
 	@echo "INFO: Formatting done."
 
-# --------------------------------------------------------------------------------
-# Test setup framework
-# --------------------------------------------------------------------------------
 .PHONY: test_setup
 test_setup:
 	@echo "INFO: Setting up test project."
@@ -341,42 +302,34 @@ test_setup:
 	@echo "INFO: Google Test/Google Mock libraries copied"
 	@echo "INFO: Google Test setup complete"
 
-# --------------------------------------------------------------------------------
-# Test compile
-# --------------------------------------------------------------------------------
+# Create the target for compiling test files
 .PHONY: test_compile
-test_compile: test_setup $(TST_OBJS)
-	@echo "INFO: Test Compilation Successful"
+test_compile: test_setup
+	@echo "INFO: Compiling Test Source Files"
+	@mkdir -p $(TST_OBJ_DIR)
+	@$(foreach src,$(TST_SRCS), \
+		echo "INFO: Compiling: $(abspath $(src))"; \
+		$(TST_COMPILER) $(TST_CPPFLAGS) $(TST_CXXFLAGS) -c $(src) -o $(TST_OBJ_DIR)/$(notdir $(src:.cpp=.o)); \
+		echo "INFO: Object file created at: $(TST_OBJ_DIR)/$(notdir $(src:.cpp=.o))"; \
+	)
+	@echo "INFO: Compilation Successful"
 
-$(TST_OBJ_DIR)/%.o: $(TST_SRC_DIR)/%.cpp
-	@echo "INFO: Compiling $<"
-	@mkdir -p $(dir $@)
-	$(TST_COMPILER) $(TST_CPPFLAGS) $(TST_CXXFLAGS) -c $< -o $@
-
--include $(DEPS)
-
-# --------------------------------------------------------------------------------
-# Test link
-# --------------------------------------------------------------------------------
+# Link test binaries and Google Test libraries together
 .PHONY: test_link
-test_link: test_compile $(TST_BINS)
-	@echo "INFO: Test Linking Successful"
+test_link: test_compile
+	@echo "INFO: Linking object files to create test executables"
+	@$(foreach src,$(TST_SRCS), \
+		$(eval TEST_BIN=$(TST_BIN_DIR)/$(CFG_TST_EXE_PREFIX)$(notdir $(src:.cpp=))$(if $(filter windows,$(OS)),.exe,)); \
+		echo "INFO: Linking: $(TEST_BIN)"; \
+		$(TST_COMPILER) $(TST_LDFLAGS) $(TST_OBJ_DIR)/$(notdir $(src:.cpp=.o)) $(TST_LDLIBS) -o $(TEST_BIN); \
+	)
+	@echo "INFO: Linking Successful"
 
-$(TST_BIN_DIR)/$(CFG_TST_EXE_PREFIX)%: $(TST_OBJ_DIR)/%.o
-	@echo "INFO: Linking $@"
-	@mkdir -p $(dir $@)
-	$(TST_COMPILER) $< $(TST_LDFLAGS) $(TST_LDLIBS) $(TST_OBJS) -o $@
-
-# --------------------------------------------------------------------------------
-# Test build
-# --------------------------------------------------------------------------------
+# Define the complete target for building the test executables
 .PHONY: test_build
 test_build: test_setup test_compile test_link
 	@echo "INFO: Test Build Successful"
 
-# --------------------------------------------------------------------------------
-# Test run
-# --------------------------------------------------------------------------------
 .PHONY: test_run
 test_run: test_build
 	@echo "INFO: Running all tests"
@@ -389,34 +342,22 @@ test_run: test_build
 	done
 	@echo "INFO: All tests Executed"
 
-# --------------------------------------------------------------------------------
-# Test build and run
-# --------------------------------------------------------------------------------
 .PHONY: test
 test: resources build test_build
 	@echo "INFO: Test Executed"
 
-# --------------------------------------------------------------------------------
-# Test clean
-# --------------------------------------------------------------------------------
 .PHONY: test_clean
 test_clean:
 	@echo "INFO: Cleaning up test build directories"
 	@rm -rf $(TST_BIN_DIR) $(TST_OBJ_DIR) $(TST_LIB_DIR) $(TST_INS_DIR) $(TST_EXT_DIR)
 	@echo "INFO: Test Clean complete"
 
-# --------------------------------------------------------------------------------
-# Documentation setup
-# --------------------------------------------------------------------------------
 .PHONY: setup_doc
 setup_doc:
 	@echo "Generating default Doxygen configuration..."
 	@doxygen -g $(DOXYFILE)
 	@echo "Default Doxygen configuration generated as $(DOXYFILE)"
 
-# --------------------------------------------------------------------------------
-# Documentation
-# --------------------------------------------------------------------------------
 .PHONY: doc
 doc:
 	@echo "Generating documentation..."
@@ -432,9 +373,6 @@ clean_doc:
 	@rm -rf $(CPP_BLD_DOC)
 	@echo "Documentation cleaned up."
 
-# --------------------------------------------------------------------------------
-# Additional Targets: Valgrind and Coverage
-# --------------------------------------------------------------------------------
 .PHONY: valgrind
 valgrind: build
 	@echo "INFO: Running executable under Valgrind..."
@@ -453,9 +391,6 @@ coverage:
 	@cd $(CFG_SRC_DIR) && gcov $(CFG_SRC_FILES)
 	@echo "INFO: Code coverage analysis complete. (Check the generated .gcov files for details)"
 
-# --------------------------------------------------------------------------------
-# Help
-# --------------------------------------------------------------------------------
 .PHONY: help
 help:
 	@echo " "
