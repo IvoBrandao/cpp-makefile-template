@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "options.hpp"  
+#include "options.hpp"
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

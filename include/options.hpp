@@ -75,5 +75,3 @@ class AppOptions {
 // -o         - parse_option_no_value
 // -o value   - parse_option_with_value
 // -o=value   - parse_option_with_value
-
-
