@@ -1,0 +1,47 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "make: build debug",
+      "type": "shell",
+      "command": "make",
+      "args": [
+        "all"
+        // "release=0" is the default in the makefile, so it's not needed
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": [
+        "$gcc"
+      ],
+      "detail": "Runs 'make all' to build the default debug version."
+    },
+    {
+      "label": "make: build release",
+      "type": "shell",
+      "command": "make",
+      "args": [
+        "all",
+        "release=1"  // <-- This variable tells the makefile to build in release mode
+      ],
+      "group": "build",
+      "problemMatcher": [
+        "$gcc"
+      ],
+      "detail": "Runs 'make all release=1' to build the optimized release version."
+    },
+    {
+      "label": "make: clean",
+      "type": "shell",
+      "command": "make",
+      "args": [
+        "clean"
+      ],
+      "group": "build",
+      "problemMatcher": [],
+      "detail": "Runs 'make clean' to remove all build artifacts."
+    }
+  ]
+}
